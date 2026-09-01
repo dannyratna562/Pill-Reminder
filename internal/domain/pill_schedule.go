@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 )
@@ -158,7 +159,7 @@ func ValidatePillName(name string) error {
 	if strings.TrimSpace(name) == "" {
 		return ErrEmptyPillName
 	}
-	if len(name) > MaxPillNameLen {
+	if utf8.RuneCountInString(name) > MaxPillNameLen {
 		return ErrPillNameTooLong
 	}
 	return nil

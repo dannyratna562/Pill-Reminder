@@ -102,6 +102,16 @@ func TestPillSchedulesSchema_ChecksReject_Integration(t *testing.T) {
 			sql:            `INSERT INTO pill_schedules (parent_id, pill_name, times) VALUES ($1, 'Aspirin', ARRAY['08:00', NULL]::time[])`,
 			wantConstraint: "pill_schedules_times_no_nulls",
 		},
+		{
+			name:           "times element not minute-aligned",
+			sql:            `INSERT INTO pill_schedules (parent_id, pill_name, times) VALUES ($1, 'Aspirin', ARRAY['08:00:30']::time[])`,
+			wantConstraint: "pill_schedules_times_minute_aligned",
+		},
+		{
+			name:           "times element at or beyond 24:00:00",
+			sql:            `INSERT INTO pill_schedules (parent_id, pill_name, times) VALUES ($1, 'Aspirin', ARRAY['24:00:00']::time[])`,
+			wantConstraint: "pill_schedules_times_minute_aligned",
+		},
 	}
 
 	for _, tt := range tests {

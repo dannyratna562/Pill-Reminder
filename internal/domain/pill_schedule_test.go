@@ -208,6 +208,28 @@ func TestValidatePillName(t *testing.T) {
 			t.Errorf("ValidatePillName(101 chars) error = %v, want ErrPillNameTooLong", err)
 		}
 	})
+
+	t.Run("100 multi-byte runes is within limit even though it is 200 bytes", func(t *testing.T) {
+		// "П" is a 2-byte UTF-8 Cyrillic character, so 100 repetitions is
+		// 100 runes but 200 bytes: a byte-counting check would wrongly
+		// reject this even though it's well within the 100-character limit
+		// (and within Postgres's char_length(...) <= 100 CHECK constraint).
+		name := strings.Repeat("П", domain.MaxPillNameLen)
+		if got := len(name); got != domain.MaxPillNameLen*2 {
+			t.Fatalf("test setup: len(name) = %d bytes, want %d", got, domain.MaxPillNameLen*2)
+		}
+		if err := domain.ValidatePillName(name); err != nil {
+			t.Errorf("ValidatePillName(100 Cyrillic runes) error = %v, want nil", err)
+		}
+	})
+
+	t.Run("101 multi-byte runes exceeds limit", func(t *testing.T) {
+		name := strings.Repeat("П", domain.MaxPillNameLen+1)
+		err := domain.ValidatePillName(name)
+		if !errors.Is(err, domain.ErrPillNameTooLong) {
+			t.Errorf("ValidatePillName(101 Cyrillic runes) error = %v, want ErrPillNameTooLong", err)
+		}
+	})
 }
 
 func TestPillSchedule_Validate(t *testing.T) {

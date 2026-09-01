@@ -30,6 +30,28 @@
 --   (delete/deactivate) will set `updated_at = now()` explicitly in their
 --   own sqlc queries, so the write path stays visible in one place instead
 --   of behind a trigger.
+-- pill_schedules_times_are_valid backs the pill_schedules_times_minute_aligned
+-- CHECK constraint below. Postgres CHECK constraints cannot contain
+-- subqueries directly (even ones built from unnest()), so the per-element
+-- validation has to live in a function instead of an inline `EXISTS (SELECT
+-- ... FROM unnest(times) ...)` expression. It exists purely to keep the DB
+-- in sync with the same two rules internal/store/pill_schedule_convert.go's
+-- toDomainTimeOfDay enforces on read: every element must be minute-aligned
+-- (no seconds) and strictly less than 24:00:00. Without this, a row written
+-- via direct SQL (bypassing domain validation) could pass the DB but fail
+-- every subsequent read, including story-04's list endpoint.
+CREATE FUNCTION pill_schedules_times_are_valid(times TIME(0)[])
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+    SELECT NOT EXISTS (
+        SELECT 1 FROM unnest(times) AS t
+        WHERE t >= '24:00:00'::time OR date_trunc('minute', t) <> t
+    );
+$$;
+
 CREATE TABLE pill_schedules (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     parent_id  UUID NOT NULL,
@@ -39,10 +61,11 @@ CREATE TABLE pill_schedules (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT pill_schedules_pill_name_not_blank CHECK (btrim(pill_name) <> ''),
-    CONSTRAINT pill_schedules_pill_name_len       CHECK (char_length(pill_name) <= 100),
-    CONSTRAINT pill_schedules_times_cardinality   CHECK (cardinality(times) BETWEEN 1 AND 24),
-    CONSTRAINT pill_schedules_times_no_nulls      CHECK (array_position(times, NULL) IS NULL)
+    CONSTRAINT pill_schedules_pill_name_not_blank  CHECK (btrim(pill_name) <> ''),
+    CONSTRAINT pill_schedules_pill_name_len        CHECK (char_length(pill_name) <= 100),
+    CONSTRAINT pill_schedules_times_cardinality    CHECK (cardinality(times) BETWEEN 1 AND 24),
+    CONSTRAINT pill_schedules_times_no_nulls       CHECK (array_position(times, NULL) IS NULL),
+    CONSTRAINT pill_schedules_times_minute_aligned CHECK (pill_schedules_times_are_valid(times))
 );
 
 CREATE INDEX idx_pill_schedules_parent_active ON pill_schedules (parent_id) WHERE active;
