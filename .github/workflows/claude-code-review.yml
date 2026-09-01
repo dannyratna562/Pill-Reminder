@@ -1,15 +1,5 @@
 name: Claude Code Review
 
-prompt: >
-  Review this PR's diff. Read CLAUDE.md and the story file it
-  references (in /docs/stories/) first. Check the diff against
-  the story's acceptance criteria and CLAUDE.md's Definition of
-  Done. Do NOT fix anything yourself — only flag what needs
-  human judgment: unmet acceptance criteria, scope creep beyond
-  the story, weak or missing test coverage on auth/ownership
-  logic, and anything you're not confident about. Post findings
-  as inline comments where possible, or a summary comment.
-
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
@@ -31,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
       id-token: write
 
     steps:
@@ -48,7 +38,15 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          prompt: >
+            Review this PR's diff. Read CLAUDE.md and the story file it
+            references (in /docs/stories/) first. Check the diff against
+            the story's acceptance criteria and CLAUDE.md's Definition of
+            Done. Do NOT fix anything yourself — only flag what needs
+            human judgment: unmet acceptance criteria, scope creep beyond
+            the story, weak or missing test coverage on auth/ownership
+            logic, and anything you're not confident about. Post findings
+            as inline comments where possible, or a summary comment.
           claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment"'
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
