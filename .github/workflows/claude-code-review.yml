@@ -1,5 +1,15 @@
 name: Claude Code Review
 
+prompt: >
+  Review this PR's diff. Read CLAUDE.md and the story file it
+  references (in /docs/stories/) first. Check the diff against
+  the story's acceptance criteria and CLAUDE.md's Definition of
+  Done. Do NOT fix anything yourself — only flag what needs
+  human judgment: unmet acceptance criteria, scope creep beyond
+  the story, weak or missing test coverage on auth/ownership
+  logic, and anything you're not confident about. Post findings
+  as inline comments where possible, or a summary comment.
+
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
