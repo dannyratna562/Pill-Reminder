@@ -14,7 +14,7 @@ input=$(cat)
 command=$(echo "$input" | jq -r '.tool_input.command // empty')
 
 # Only act on commands that look like PR creation. Everything else is a no-op.
-if [[ "$command" != *"gh pr create"* && "$command" != *"git push"* ]]; then
+if [ "$command" != *"gh pr create"*]; then
   exit 0
 fi
 
