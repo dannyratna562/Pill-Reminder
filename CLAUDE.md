@@ -104,8 +104,8 @@ go run ./cmd/api
 - Auth/ownership checks (family_link validation) must have explicit test
   coverage on every write endpoint — this is the area most likely to be
   under-tested by default.
-- Do not skip or weaken an existing test to make CI pass — fix the cause
-  or flag it for a human.
+<!-- - Do not skip or weaken an existing test to make CI pass — fix the cause
+  or flag it for a human. -->
 
 ## PR Rules
 

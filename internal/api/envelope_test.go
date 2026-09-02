@@ -9,7 +9,7 @@ import (
 
 func TestRespondData(t *testing.T) {
 	w := httptest.NewRecorder()
-	respondData(w, http.StatusCreated, map[string]string{"foo": "bar"})
+	respondData(w, http.StatusCreated, map[string]string{"foo": "bar2"})
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("status = %d, want %d", w.Code, http.StatusCreated)
