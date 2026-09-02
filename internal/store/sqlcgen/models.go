@@ -26,3 +26,13 @@ type PairingCode struct {
 	UsedAt    pgtype.Timestamptz `json:"used_at"`
 	CreatedAt time.Time          `json:"created_at"`
 }
+
+type PillSchedule struct {
+	ID        uuid.UUID     `json:"id"`
+	ParentID  uuid.UUID     `json:"parent_id"`
+	PillName  string        `json:"pill_name"`
+	Times     []pgtype.Time `json:"times"`
+	Active    bool          `json:"active"`
+	CreatedAt time.Time     `json:"created_at"`
+	UpdatedAt time.Time     `json:"updated_at"`
+}
